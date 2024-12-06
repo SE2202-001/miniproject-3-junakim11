@@ -133,7 +133,6 @@ document.getElementById("file").addEventListener("change", function (event) {
           )
       );
       listing(jobs);
-      //original = jobs;
 
       const levels = [...new Set(data.map((job) => job.Level))];
       filterMenu("level", levels);
@@ -149,6 +148,7 @@ document.getElementById("file").addEventListener("change", function (event) {
 
     } catch (error) {
       console.error("Error in getting the job list: ", error);
+      alert("The file chosen is not appropriate or does not exist!\nPlease choose another one.");
     }
   };
   reader.readAsText(file);
