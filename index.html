@@ -6,13 +6,13 @@
     <title>Jobs</title>
   </head>
   <body style="background-color: rgb(224, 224, 224)">
-    <div style="background-color: white; border-radius: 5px; padding: 5px">
+    <div style="background-color: white; border-radius: 5px; padding: 20px">
       <h1>Job Analysis</h1>
       <div style="margin-bottom: 10px;">
         <label for="file"></label>
         <input type="file" id="file" accept=".json" >
       </div>
-      <div style="display: flex; margin-bottom: 10px;">
+      <div style="display: none; margin-bottom: 10px;" id="filters">
         <label for="level" style="margin-right: 5px;">Filter by Level:  </label>
         <select id="level" style="margin-right: 10px; ">
           <option value="">Select a Level</option>
@@ -27,13 +27,13 @@
         </select>
         <button type="submit" id="filter-submit">Filter Jobs</button>
       </div>
-      <div style="display: flex; margin-bottom: 10px;">
+      <div style="display: none; margin-bottom: 10px;" id="sorts">
         <label for="sort" style="margin-right: 5px;">Sort By:  </label>
         <select id="sort" style="margin-right: 10px;">
-          <option value="sortPostedNewest">Sort Newest to Oldest</option>
+          <option value="sortPostedNewest">Newest to Oldest</option>
           <option value="sortAlpha">Title A-Z</option>
           <option value="sortReverseAlpha">Title Z-A</option>
-          <option value="sortPostedOldest">Sort Oldest to Newest</option>
+          <option value="sortPostedOldest">Oldest to Newest</option>
         </select>
         <button type="submit" id="sort-submit">Sort Jobs</button>
       </div>

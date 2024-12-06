@@ -8,10 +8,14 @@ class Job {
     this.Detail = Detail;
   }
   list() {
-    const jobDiv = document.createElement("div");
-    jobDiv.classList.add("job");
-    jobDiv.innerHTML = `<div style="padding:10px; border-bottom: solid rgb(224, 224, 224);">${this.Title}</div>`;
-    document.getElementById("job-list").appendChild(jobDiv);
+    try {
+      const jobDiv = document.createElement("div");
+      jobDiv.classList.add("job");
+      jobDiv.innerHTML = `<div style="padding:10px; border-bottom: solid rgb(224, 224, 224);">${this.Title}</div>`;
+      document.getElementById("job-list").appendChild(jobDiv);
+    } catch (error) {
+      console.error("Error displaying job list: ", error);
+    }
   }
   display() {
     console.log(`Job Title: ${this.Title}`);
@@ -25,132 +29,191 @@ class Job {
     return this.Posted;
   }
   getPostedMin() {
-    if (typeof this.Posted === "string") {
-      let array = this.Posted.split(" ");
-      if (array[1] === "minutes") {
-        let postedMin = Number(array[0]);
-        this.postedMin = postedMin;
+    try {
+      if (typeof this.Posted === "string") {
+        let array = this.Posted.split(" ");
+        if (array[1] === "minutes") {
+          let postedMin = Number(array[0]);
+          this.postedMin = postedMin;
+        } else {
+          let postedMin = Number(array[0]);
+          this.postedMin = postedMin * 60;
+        }
       } else {
-        let postedMin = Number(array[0]);
-        this.postedMin = postedMin * 60;
+        console.error("Error: Posted is not a string:", this.Posted);
       }
-    } else {
-      console.error("Error: Posted is not a string:", this.Posted);
+    } catch (error) {
+      console.error("Error: Can't parse Posted, ", error);
     }
   }
 }
 
 let data;
 let jobs;
-
+let filtered;
+function listing(jobList) {
+  clearJobList();
+  if (jobList.length != 0) {
+    jobList.forEach((job) => job.list());
+  } else {
+    const jobDiv = document.createElement("div");
+    jobDiv.classList.add("job");
+    jobDiv.innerHTML = `<div style="padding:10px;">No jobs available</div>`;
+    document.getElementById("job-list").appendChild(jobDiv);
+  }
+}
+function clearJobList() {
+  document.getElementById("job-list").innerHTML = "";
+}
 function filterByLevel(level) {
-  const jobList = document.getElementById("job-list");
-  jobList.innerHTML = "";
-  const filtered = jobs.filter((job) => job.Level === level);
-  filtered.forEach((job) => job.list());
+   filtered = jobs.filter((job) => job.Level === level);
+  listing(filtered);
 }
 function filterByType(type) {
-  const jobList = document.getElementById("job-list");
-  jobList.innerHTML = "";
-  const filtered = jobs.filter((job) => job.Type === type);
-  filtered.forEach((job) => job.list());
+   filtered = jobs.filter((job) => job.Type === type);
+  listing(filtered);
 }
 function filterBySkill(skill) {
-  const jobList = document.getElementById("job-list");
-  jobList.innerHTML = "";
-  const filtered = jobs.filter((job) => job.Skill === skill);
-  filtered.forEach((job) => job.list());
+   filtered = jobs.filter((job) => job.Skill === skill);
+  listing(filtered);
 }
-function select(selectedTitle) {
-  return jobs.find((job) => job.Title == selectedTitle);
+function filterByLevelType(level, type) {
+   filtered = jobs.filter(
+    (job) => job.Level === level && job.Type === type
+  );
+  listing(filtered);
 }
+function filterByLevelSkill(level, skill) {
+   filtered = jobs.filter(
+    (job) => job.Level === level && job.Skill === skill
+  );
+  listing(filtered);
+}
+function filterByTypeSkill(type, skill) {
+   filtered = jobs.filter(
+    (job) => job.Type === type && job.Skill === skill
+  );
+  listing(filtered);
+}
+function filterByAll(type, skill, level) {
+   filtered = jobs.filter(
+    (job) => job.Level === level && job.Type === type && job.Skill === skill
+  );
+  listing(filtered);
+}
+
+function filterMenu(id, menus) {
+  menus.forEach((menu) => {
+    const option = document.createElement("option");
+    option.value = menu;
+    option.textContent = menu;
+    document.getElementById(id).appendChild(option);
+  });
+}
+let original;
 document.getElementById("file").addEventListener("change", function (event) {
   const file = event.target.files[0];
+  if (!file) {
+    console.log("No file!");
+    return;
+  }
   const reader = new FileReader();
   reader.onload = function (e) {
-    data = JSON.parse(e.target.result);
-    jobs = data.map(
-      (jobData) =>
-        new Job(
-          jobData.Title,
-          jobData.Posted,
-          jobData.Type,
-          jobData.Level,
-          jobData.Skill,
-          jobData.Detail
-        )
-    );
-    jobs.forEach((job) => job.list());
-    const levels = [...new Set(data.map((job) => job.Level))];
-    levels.forEach((level) => {
-      const option = document.createElement("option");
-      option.value = level;
-      option.textContent = level;
-      document.getElementById("level").appendChild(option);
-    });
-    const types = [...new Set(data.map((job) => job.Type))];
-    types.forEach((type) => {
-      const option = document.createElement("option");
-      option.value = type;
-      option.textContent = type;
-      document.getElementById("type").appendChild(option);
-    });
-    const skills = [...new Set(data.map((job) => job.Skill))];
-    skills.forEach((skill) => {
-      const option = document.createElement("option");
-      option.value = skill;
-      option.textContent = skill;
-      document.getElementById("skill").appendChild(option);
-    });
-    jobs.forEach((job) => job.getPostedMin());
+    try {
+      data = JSON.parse(e.target.result);
+      jobs = data.map(
+        (jobData) =>
+          new Job(
+            jobData.Title,
+            jobData.Posted,
+            jobData.Type,
+            jobData.Level,
+            jobData.Skill,
+            jobData.Detail
+          )
+      );
+      listing(jobs);
+      //original = jobs;
+
+      const levels = [...new Set(data.map((job) => job.Level))];
+      filterMenu("level", levels);
+      const types = [...new Set(data.map((job) => job.Type))];
+      filterMenu("type", types);
+      const skills = [...new Set(data.map((job) => job.Skill))];
+      filterMenu("skill", skills);
+
+      jobs.forEach((job) => job.getPostedMin());
+
+      document.getElementById("filters").style.display = "flex";
+      document.getElementById("sorts").style.display = "flex";
+
+    } catch (error) {
+      console.error("Error in getting the job list: ", error);
+    }
   };
   reader.readAsText(file);
 });
 
 document.getElementById("job-list").addEventListener("click", function (event) {
-  const selected = event.target.textContent;
-  const selectedJob = select(selected);
-  alert(`Title: ${selectedJob.Title}\nType: ${selectedJob.Type}\nLevel: ${selectedJob.Level}\nSkill: ${selectedJob.Skill}\nDescription: ${selectedJob.Detail}\nPosted: ${selectedJob.Posted}`);
+  try {
+    const selected = event.target.textContent;
+    const selectedJob = jobs.find((job) => job.Title == selected);
+    alert(
+      `Title: ${selectedJob.Title}\nType: ${selectedJob.Type}\nLevel: ${selectedJob.Level}\nSkill: ${selectedJob.Skill}\nDescription: ${selectedJob.Detail}\nPosted: ${selectedJob.Posted}`
+    );
+  } catch (error) {
+    console.error("Error: Can't select this job,", error);
+  }
 });
 
 document.getElementById("filter-submit").addEventListener("click", function () {
   const selectedLevel = document.getElementById("level").value;
   if (selectedLevel) {
     filterByLevel(selectedLevel);
-  } else {
-    jobs.forEach((job) => job.list()); // Show all jobs if no skill is selected
   }
   const selectedType = document.getElementById("type").value;
   if (selectedType) {
     filterByType(selectedType);
-  } else {
-    jobs.forEach((job) => job.list()); // Show all jobs if no skill is selected
   }
   const selectedSkill = document.getElementById("skill").value;
   if (selectedSkill) {
     filterBySkill(selectedSkill);
-  } else {
-    jobs.forEach((job) => job.list()); // Show all jobs if no skill is selected
+  }
+
+  if (selectedLevel && selectedType) {
+    filterByLevelType(selectedLevel, selectedType);
+  }
+  if (selectedLevel && selectedSkill) {
+    filterByLevelSkill(selectedLevel, selectedSkill);
+  }
+  if (selectedType && selectedSkill) {
+    filterByTypeSkill(selectedType, selectedSkill);
+  }
+  if (selectedType && selectedSkill && selectedLevel) {
+    filterByAll(selectedType, selectedSkill, selectedLevel);
+  }
+
+  if (!selectedLevel && !selectedSkill && !selectedType) {
+    listing(jobs); // Show all jobs if no filter is selected
   }
 });
 
 document.getElementById("sort-submit").addEventListener("click", function () {
   const sorted = document.getElementById("sort").value;
-  const jobList = document.getElementById("job-list");
-  jobList.innerHTML = "";
-  if (sorted === "sortAlpha") {
-    jobs.sort((a, b) => a.Title.localeCompare(b.Title));
-    jobs.forEach((job) => job.list());
-  } else if (sorted === "sortReverseAlpha") {
-    jobs.reverse((a, b) => a.Title.localeCompare(b.Title)); 
-    jobs.forEach((job) => job.list());
-  } else if (sorted === "sortPostedOldest") {
-    jobs.reverse((a, b) => a.postedMin.localeCompare(b.postedMin));
-    jobs.forEach((job) => job.list());
-  } else if (sorted === "sortPostedNewest") {
-    jobs.reverse((a, b) => b.postedMin.localeCompare(a.postedMin));
-    jobs.forEach((job) => job.list());
-  } else {
-    jobs.forEach((job) => job.list()); // Show all jobs if no skill is selected
+
+  try {
+    if (sorted === "sortAlpha") {
+      filtered.sort((a, b) => a.Title.localeCompare(b.Title));
+    } else if (sorted === "sortReverseAlpha") {
+      filtered.reverse((a, b) => a.Title.localeCompare(b.Title));
+    } else if (sorted === "sortPostedOldest") {
+      filtered.sort((a, b) => b.postedMin - a.postedMin);
+    } else if (sorted === "sortPostedNewest") {
+      filtered.sort((a, b) => a.postedMin - b.postedMin);
+    }
+
+    listing(filtered);
+  } catch (error) {
+    console.error("Error: Can't sort the jobs, ", error);
   }
 });
